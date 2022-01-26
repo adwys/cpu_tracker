@@ -9,5 +9,5 @@ add_compile_options(
 #        "-Weverything"
 )
 
-add_executable(cpu_usage_tracker main.c)
+add_executable(cpu_usage_tracker main.c cpuUsageTracker.c)
 target_link_libraries(cpu_usage_tracker pthread )

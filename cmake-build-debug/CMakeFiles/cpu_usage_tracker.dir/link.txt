@@ -1,1 +1,0 @@
-/usr/bin/cc -g   CMakeFiles/cpu_usage_tracker.dir/main.c.o  -o cpu_usage_tracker  -lpthread 

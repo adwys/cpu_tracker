@@ -1,3 +1,0 @@
-/mnt/c/Users/HP/CLionProjects/cpu_usage_tracker/cpu_tracker/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/mnt/c/Users/HP/CLionProjects/cpu_usage_tracker/cpu_tracker/cmake-build-debug/CMakeFiles/edit_cache.dir
-/mnt/c/Users/HP/CLionProjects/cpu_usage_tracker/cpu_tracker/cmake-build-debug/CMakeFiles/cpu_usage_tracker.dir
