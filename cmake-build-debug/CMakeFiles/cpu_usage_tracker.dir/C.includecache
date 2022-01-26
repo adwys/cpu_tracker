@@ -1,0 +1,18 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/mnt/c/Users/HP/CLionProjects/cpu_usage_tracker/cpu_tracker/cpuUsageTracker.h
+stdio.h
+-
+pthread.h
+-
+
+/mnt/c/Users/HP/CLionProjects/cpu_usage_tracker/cpu_tracker/main.c
+cpuUsageTracker.h
+/mnt/c/Users/HP/CLionProjects/cpu_usage_tracker/cpu_tracker/cpuUsageTracker.h
+
