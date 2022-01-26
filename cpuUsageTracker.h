@@ -7,21 +7,18 @@
 #include <semaphore.h>
 #include <string.h>
 sem_t mutex;
+sem_t empty;
+sem_t full;
+int in = 0;
+int out = 0;
+FILE *raw_data[10];
 
-FILE *raw_data;
+struct timespec sec = {1,2};
 
-struct data{
-    char cpu[5];
-    int a;
-    int b;
-    int c;
-    int previdle;
+_Noreturn void* readerThreadHandler(void);
 
-};
-
-void* readerThreadHandler(void);
-void* analyzerThreadHandler(void);
-struct data parseData(void);
+_Noreturn void* analyzerThreadHandler(void);
+unsigned long long parseData(void);
 int calculateCpuUsage(void);
 
 #endif

@@ -1,61 +1,51 @@
 #include "cpuUsageTracker.h"
 
-struct data parseData(){
-    struct data parsedData;
-    char cpu_data[100];
-    fread(cpu_data, 100, 1,raw_data);
-    char temp[5][20];
-    int j=0,dataLen = strlen(cpu_data);
-    for(int i=0;i<5;i++){
-        int index=0;
-        temp[i][index] = '\0';
-        while(cpu_data[j] != ' ' && dataLen>=j){
-            temp[i][index] = cpu_data[j];
-            index++;
-            j++;
-        }
-        temp[i][index] = '\0';
+unsigned long long parseData(){
+    char buffer[1024];
+    fread(buffer, sizeof(buffer) - 1, 1,raw_data[out]);
+    out = (out+1)%10;
+    unsigned long long user = 0, nice = 0, system = 0, idle = 0;
+    unsigned long long iowait = 0, irq = 0, softirq = 0, steal = 0, guest = 0, guestnice = 0;
+    sscanf(buffer,
+           "cpu  %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu",
+           &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal, &guest, &guestnice);
 
-        if(dataLen<=j)break;
-        j++;
-
-    }
-
-    strcpy(parsedData.cpu,temp[0]);
-    parsedData.a = atoi(temp[1]);
-    parsedData.b = atoi(temp[2]);
-    parsedData.c = atoi(temp[3]);
-    parsedData.previdle = atoi(temp[4]);
-
-    return parsedData;
+    return user + nice + system + idle + iowait + irq + softirq + steal;
 }
 
 int calculateCpuUsage(void){
-
-
-
-}
-
-
-void* readerThreadHandler(void){
-
-
-    sem_init(&mutex, 0, 1);
-    sem_wait(&mutex);
-    raw_data = popen("#!/bin/bash\n"
-                     "read cpu a b c previdle rest < /proc/stat\n"
-                     "echo $cpu $a $b $c $previdle","r");
-    sem_post(&mutex);
-
+   unsigned long long wyn = parseData();
+    printf("wyn = %llu\n",wyn);
     return NULL;
 }
 
-void* analyzerThreadHandler(void){
-    char text[1000];
-    sem_wait(&mutex);
-    calculateCpuUsage();
+
+_Noreturn void* readerThreadHandler(void){
+    pthread_mutex_init(&mutex, NULL);
+    sem_init(&empty,0,10);
+    sem_init(&full,0,0);
 
 
-    sem_post(&mutex);
+    while(1){
+        sem_wait(&empty);
+        pthread_mutex_lock(&mutex);
+        raw_data[in] = popen("cat /proc/stat","r");
+        in = (in+1)%10;
+        pthread_mutex_unlock(&mutex);
+        sem_post(&full);
+        nanosleep(&sec, NULL);
+    }
+
+}
+
+_Noreturn void* analyzerThreadHandler(void){
+
+    while(1){
+        sem_wait(&full);
+        pthread_mutex_lock(&mutex);
+        calculateCpuUsage();
+        pthread_mutex_unlock(&mutex);
+        sem_post(&empty);
+    }
 
 }
