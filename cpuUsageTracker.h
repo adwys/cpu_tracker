@@ -12,7 +12,6 @@
 _Noreturn void* readerThreadHandler(void);
 
 _Noreturn void* analyzerThreadHandler(void);
-unsigned long long parseData(void);
 
 _Noreturn unsigned long long calculateCpuUsage(void);
 
