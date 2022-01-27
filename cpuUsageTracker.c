@@ -1,4 +1,12 @@
 #include "cpuUsageTracker.h"
+sem_t mutex;
+sem_t empty;
+sem_t full;
+int in = 0;
+int out = 0;
+FILE *raw_data[10];
+struct timespec ttime = {1,2};
+
 
 unsigned long long parseData(){
     char buffer[1024];
@@ -13,10 +21,39 @@ unsigned long long parseData(){
     return user + nice + system + idle + iowait + irq + softirq + steal;
 }
 
-int calculateCpuUsage(void){
-   unsigned long long wyn = parseData();
-    printf("wyn = %llu\n",wyn);
-    return NULL;
+_Noreturn unsigned long long calculateCpuUsage(void){
+    char buffer[1024];
+
+    unsigned long long user = 0, nice = 0, system = 0, idle = 0;
+    unsigned long long iowait = 0, irq = 0, softirq = 0, steal = 0, guest = 0, guestnice = 0;
+
+    unsigned long long prevTotal = 0,total = 0,prevIdle = 0,idleCurr = 0;
+    unsigned int percentage = 0;
+    while(1){
+        sem_wait(&full);
+        pthread_mutex_lock(&mutex);
+
+        fread(buffer, sizeof(buffer) - 1, 1,raw_data[out]);
+        out = (out+1)%10;
+        prevIdle = idleCurr;
+        prevTotal = total;
+        sscanf(buffer,
+               "cpu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu",
+               &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal, &guest, &guestnice);
+
+        idleCurr = idle + iowait;
+        total = idle + user + nice + system + irq + softirq + steal;
+
+        total-=prevTotal;
+        idleCurr-=prevIdle;
+
+        percentage = (100 * (total - idleCurr))/total;
+        printf("%d\n",percentage);
+
+        pthread_mutex_unlock(&mutex);
+        sem_post(&empty);
+    }
+
 }
 
 
@@ -33,19 +70,11 @@ _Noreturn void* readerThreadHandler(void){
         in = (in+1)%10;
         pthread_mutex_unlock(&mutex);
         sem_post(&full);
-        nanosleep(&sec, NULL);
+        nanosleep(&ttime, NULL);
     }
 
 }
 
 _Noreturn void* analyzerThreadHandler(void){
-
-    while(1){
-        sem_wait(&full);
-        pthread_mutex_lock(&mutex);
-        calculateCpuUsage();
-        pthread_mutex_unlock(&mutex);
-        sem_post(&empty);
-    }
-
+    calculateCpuUsage();
 }
