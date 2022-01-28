@@ -2,8 +2,10 @@
 sem_t mutex;
 sem_t empty;
 sem_t full;
+sem_t print;
 int in = 0;
 int out = 0;
+unsigned int percentage =0;
 FILE *raw_data[10];
 struct timespec ttime = {1,2};
 
@@ -14,7 +16,6 @@ _Noreturn unsigned long long calculateCpuUsage(void){
     unsigned long long iowait = 0, irq = 0, softirq = 0, steal = 0, guest = 0, guestnice = 0;
 
     unsigned long long prevTotal = 0,total = 0,prevIdle = 0,idleCurr = 0;
-    unsigned int percentage = 0;
     while(1){
         sem_wait(&full);
         pthread_mutex_lock((pthread_mutex_t *) &mutex);
@@ -34,7 +35,7 @@ _Noreturn unsigned long long calculateCpuUsage(void){
         idleCurr-=prevIdle;
 
         percentage = (100 * (total - idleCurr))/total;
-        printf("%d\n",percentage);
+        sem_post(&print);
 
         pthread_mutex_unlock((pthread_mutex_t *) &mutex);
         sem_post(&empty);
@@ -63,4 +64,15 @@ _Noreturn void* readerThreadHandler(void){
 
 _Noreturn void* analyzerThreadHandler(void){
     calculateCpuUsage();
+}
+
+_Noreturn void* printerThreadHandler(void){
+    sem_init(&print,0,0);
+
+    while(1){
+        sem_wait(&print);
+        printf("%d\n",percentage);
+    }
+
+
 }

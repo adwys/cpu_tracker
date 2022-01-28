@@ -13,6 +13,8 @@ _Noreturn void* readerThreadHandler(void);
 
 _Noreturn void* analyzerThreadHandler(void);
 
+_Noreturn void* printerThreadHandler(void);
+
 _Noreturn unsigned long long calculateCpuUsage(void);
 
 #endif
