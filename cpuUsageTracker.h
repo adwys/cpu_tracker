@@ -15,6 +15,8 @@ _Noreturn void* analyzerThreadHandler(void);
 
 _Noreturn void* printerThreadHandler(void);
 
-_Noreturn unsigned long long calculateCpuUsage(void);
+_Noreturn void* watchdogThreadHandler(void);
+
+_Noreturn void calculateCpuUsage(void);
 
 #endif

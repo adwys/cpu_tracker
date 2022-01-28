@@ -5,39 +5,31 @@ sem_t full;
 sem_t print;
 int in = 0;
 int out = 0;
-unsigned int percentage =0;
+double percentage =0;
 FILE *raw_data[10];
 struct timespec ttime = {1,2};
 
-_Noreturn unsigned long long calculateCpuUsage(void){
+_Noreturn void calculateCpuUsage(void){
     char buffer[1024];
-
     unsigned long long user = 0, nice = 0, system = 0, idle = 0;
     unsigned long long iowait = 0, irq = 0, softirq = 0, steal = 0, guest = 0, guestnice = 0;
-
-    unsigned long long prevTotal = 0,total = 0,prevIdle = 0,idleCurr = 0;
+    unsigned long long prevTotal = 0,total = 0,prevIdle = 0;
     while(1){
         sem_wait(&full);
-        pthread_mutex_lock((pthread_mutex_t *) &mutex);
-
         fread(buffer, sizeof(buffer) - 1, 1,raw_data[out]);
         out = (out+1)%10;
-        prevIdle = idleCurr;
-        prevTotal = total;
+
         sscanf(buffer,
                "cpu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu",
                &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal, &guest, &guestnice);
 
-        idleCurr = idle + iowait;
-        total = idle + user + nice + system + irq + softirq + steal;
+        total = user + nice + system + idle + irq + softirq + steal + iowait;
 
-        total-=prevTotal;
-        idleCurr-=prevIdle;
+        percentage = 100 - (idle-prevIdle)*100.0/(total-prevTotal);
+        prevTotal = total;
+        prevIdle = idle;
 
-        percentage = (100 * (total - idleCurr))/total;
         sem_post(&print);
-
-        pthread_mutex_unlock((pthread_mutex_t *) &mutex);
         sem_post(&empty);
     }
 
@@ -52,17 +44,15 @@ _Noreturn void* readerThreadHandler(void){
 
     while(1){
         sem_wait(&empty);
-        pthread_mutex_lock((pthread_mutex_t *) &mutex);
         raw_data[in] = popen("cat /proc/stat","r");
         in = (in+1)%10;
-        pthread_mutex_unlock((pthread_mutex_t *) &mutex);
         sem_post(&full);
         nanosleep(&ttime, NULL);
     }
 
 }
 
-_Noreturn void* analyzerThreadHandler(void){
+ void* analyzerThreadHandler(void){
     calculateCpuUsage();
 }
 
@@ -71,8 +61,11 @@ _Noreturn void* printerThreadHandler(void){
 
     while(1){
         sem_wait(&print);
-        printf("%d\n",percentage);
+        printf("%%%.0f\n",percentage);
     }
 
+}
+
+_Noreturn void* watchdogThreadHandler(void){
 
 }
