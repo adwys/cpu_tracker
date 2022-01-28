@@ -11,16 +11,16 @@ struct timespec ttime = {1,2};
 
 _Noreturn void calculateCpuUsage(void){
     char buffer[1024];
-    unsigned long long user = 0, nice = 0, system = 0, idle = 0;
-    unsigned long long iowait = 0, irq = 0, softirq = 0, steal = 0, guest = 0, guestnice = 0;
-    unsigned long long prevTotal = 0,total = 0,prevIdle = 0;
+    unsigned int user = 0, nice = 0, system = 0, idle = 0;
+    unsigned int iowait = 0, irq = 0, softirq = 0, steal = 0, guest = 0, guestnice = 0;
+    unsigned int prevTotal = 0,total = 0,prevIdle = 0;
     while(1){
         sem_wait(&full);
         fread(buffer, sizeof(buffer) - 1, 1,raw_data[out]);
         out = (out+1)%10;
 
         sscanf(buffer,
-               "cpu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu",
+               "cpu %16d %16d %16d %16d %16d %16d %16d %16d %16d %16d",
                &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal, &guest, &guestnice);
 
         total = user + nice + system + idle + irq + softirq + steal + iowait;
