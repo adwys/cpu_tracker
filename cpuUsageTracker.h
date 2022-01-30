@@ -21,6 +21,10 @@ typedef struct {
     unsigned int guestnice;
 }cpuValues;
 
+typedef enum {
+    false = 0,
+    true = 1
+} Bool;
 
 typedef struct{
     sem_t empty;
@@ -30,11 +34,15 @@ typedef struct{
     int out;
     double percentage[8];
     FILE *raw_data[10];
-    pthread_t readerThread,analyzerThread,printerThread,wathdogThread;
+    pthread_t readerThread,analyzerThread,printerThread,watchdogThread,logThread;
+    Bool readerFlag,analyzerFlag,printerFlag,logFlag;
 }globalData;
+
+
 
 globalData * data;
 
+void sigHandler();
 
 void initTracker(globalData ** data);
 
@@ -44,9 +52,12 @@ _Noreturn void readerThreadHandler(void);
 
 _Noreturn void printerThreadHandler(void);
 
-void watchdogThreadHandler(void);
+_Noreturn void watchdogThreadHandler(void);
+
+_Noreturn void logThreadHandler(void);
 
 _Noreturn void calculateCpuUsage(void);
+
 cpuValues * extractValues(FILE *rData);
 
 #endif

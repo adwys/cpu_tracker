@@ -1,20 +1,28 @@
 #include "cpuUsageTracker.h"
 
-
-void sigHandler(){
-    printf("\nsignal catched\n");
+void destroyTracker(){
     pthread_kill(data->printerThread,SIGKILL);
     pthread_kill(data->readerThread,SIGKILL);
     pthread_kill(data->analyzerThread,SIGKILL);
-    pthread_kill(data->wathdogThread,SIGKILL);
+    pthread_kill(data->watchdogThread, SIGKILL);
+    pthread_kill(data->logThread, SIGKILL);
     free(data);
-
 }
-struct timespec ttime = {1,2};
+
+void sigHandler(){
+    printf("\nprogram closed\n");
+    destroyTracker();
+}
+
+void abrtHandler(){
+    printf("program has ben idle for more than 2 sec.\n");
+    destroyTracker();
+}
 
 void initTracker(globalData ** newData){
     signal(SIGTERM,sigHandler);
     signal(SIGINT,sigHandler);
+    signal(SIGABRT,abrtHandler);
     *newData = malloc(sizeof(globalData));
     (*newData)->in = 0;
     (*newData)->out = 0;
@@ -66,6 +74,7 @@ _Noreturn void calculateCpuUsage(){
         free(values);
         sem_post(&data->print);
         sem_post(&data->empty);
+        data->analyzerFlag = true;
     }
 
 }
@@ -79,7 +88,9 @@ _Noreturn void readerThreadHandler(){
         data->raw_data[data->in] = popen("cat /proc/stat","r");
         data->in = (data->in+1)%10;
         sem_post(&data->full);
-        nanosleep(&ttime, NULL);
+        sleep(1);
+//        nanosleep(&ttime, NULL);
+        data->readerFlag = true;
     }
 
 }
@@ -89,19 +100,37 @@ void analyzerThreadHandler(){
 }
 
 _Noreturn void printerThreadHandler(){
-     for(;;){
+     while(1){
         sem_wait(&data->print);
         printf("%-5s %-5s %-5s %-5s %-5s %-5s %-5s %-5s\n", "cpu0", "cpu1", "cpu2", "cpu3", "cpu4", "cpu5" ,"cpu6", "cpu7");
         printf("%%%-4.0f %%%-4.0f %%%-4.0f %%%-4.0f %%%-4.0f %%%-4.0f %%%-4.0f %%%-4.0f\n",data->percentage[0],
                data->percentage[1],data->percentage[2],data->percentage[3],data->percentage[4],data->percentage[5],
                data->percentage[6],data->percentage[7]);
-
+        data->printerFlag = true;
     }
 }
 
 
+_Noreturn void watchdogThreadHandler(){
 
-void watchdogThreadHandler(){
+    while (1){
+        data->readerFlag = data->analyzerFlag = data->logFlag = data->printerFlag = false;
+
+        sleep(2);
+        if(data->readerFlag + data->analyzerFlag + data->logFlag + data->printerFlag != 4 ){
+            pthread_kill(data->printerThread,SIGABRT);
+        }
+    }
+
+}
+
+_Noreturn void logThreadHandler(void){
+
+
+    while(1){
+
+        data->logFlag = true;
+    }
 
 
 }
