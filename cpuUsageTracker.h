@@ -45,7 +45,9 @@ typedef struct{
 globalData * data;
 
 void sigHandler(void);
+
 void abrtHandler(void);
+
 void destroyTracker(void);
 
 void logMessage(char *);

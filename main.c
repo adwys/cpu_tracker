@@ -1,8 +1,6 @@
 #include "cpuUsageTracker.h"
 
 
-
-
 int main(void) {
     initTracker();
     pthread_create(&data->readerThread, NULL, (void *(*)(void *)) readerThreadHandler, NULL);
