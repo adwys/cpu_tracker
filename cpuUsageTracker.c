@@ -67,32 +67,6 @@ cpuValues * extractValues(FILE *rData){
     return values;
 }
 
-_Noreturn void calculateCpuUsage(){
-
-    unsigned int prevTotal[8],total[8],prevIdle[8];
-    cpuValues * values;
-    while(1){
-        sem_wait(&data->full);
-        values = extractValues(data->raw_data[data->out]);
-        data->out = (data->out+1)%10;
-        for(int i=0;i<8;i++){
-            total[i] = (values + i)->user + (values + i)->nice + (values + i)->system +
-                    (values + i)->idle + (values + i)->irq +
-                    (values + i)->softirq + (values + i)->steal + (values + i)->iowait;
-
-            data->percentage[i] = 100 - ((values + i)->idle-prevIdle[i])*100.0/(total[i]-prevTotal[i]);
-            prevTotal[i] = total[i];
-            prevIdle[i] = (values + i)->idle;
-        }
-        logMessage("[INFO]: percentages has been calculated\n");
-        free(values);
-        sem_post(&data->print);
-        sem_post(&data->empty);
-        data->analyzerFlag = true;
-    }
-
-}
-
 
 _Noreturn void readerThreadHandler(){
 
@@ -109,7 +83,28 @@ _Noreturn void readerThreadHandler(){
 }
 
 _Noreturn void analyzerThreadHandler(){
-    calculateCpuUsage();
+
+    unsigned int prevTotal[8],total[8],prevIdle[8];
+    cpuValues * values;
+    while(1){
+        sem_wait(&data->full);
+        values = extractValues(data->raw_data[data->out]);
+        data->out = (data->out+1)%10;
+        for(int i=0;i<8;i++){
+            total[i] = (values + i)->user + (values + i)->nice + (values + i)->system +
+                       (values + i)->idle + (values + i)->irq +
+                       (values + i)->softirq + (values + i)->steal + (values + i)->iowait;
+
+            data->percentage[i] = 100 - ((values + i)->idle-prevIdle[i])*100.0/(total[i]-prevTotal[i]);
+            prevTotal[i] = total[i];
+            prevIdle[i] = (values + i)->idle;
+        }
+        logMessage("[INFO]: percentages has been calculated\n");
+        free(values);
+        sem_post(&data->print);
+        sem_post(&data->empty);
+        data->analyzerFlag = true;
+    }
 }
 
 _Noreturn void printerThreadHandler(){

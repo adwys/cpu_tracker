@@ -62,7 +62,6 @@ _Noreturn void watchdogThreadHandler(void);
 
 _Noreturn void logThreadHandler(void);
 
-_Noreturn void calculateCpuUsage(void);
 
 cpuValues * extractValues(FILE *rData);
 
