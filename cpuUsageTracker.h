@@ -30,25 +30,32 @@ typedef struct{
     sem_t empty;
     sem_t full;
     sem_t print;
+    sem_t write;
+    sem_t read;
     int in;
     int out;
     double percentage[8];
     FILE *raw_data[10];
     pthread_t readerThread,analyzerThread,printerThread,watchdogThread,logThread;
     Bool readerFlag,analyzerFlag,printerFlag,logFlag;
+    int fd[2];
+    FILE * log;
 }globalData;
-
 
 
 globalData * data;
 
-void sigHandler();
+void sigHandler(void);
+void abrtHandler(void);
+void destroyTracker(void);
+
+char * logMessage(char *);
 
 void initTracker(globalData ** data);
 
 _Noreturn void readerThreadHandler(void);
 
- void analyzerThreadHandler(void);
+_Noreturn void analyzerThreadHandler(void);
 
 _Noreturn void printerThreadHandler(void);
 
