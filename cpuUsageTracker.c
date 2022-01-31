@@ -1,7 +1,7 @@
 #include "cpuUsageTracker.h"
 
 
-
+globalData * data;
 
 void destroyTracker(){
 
@@ -41,6 +41,7 @@ void initTracker(){
     sem_init(&(*newData)->write,0,1);
     sem_init(&(*newData)->read,0,0);
     pipe(data->fd);
+    data = *newData;
 
 }
 

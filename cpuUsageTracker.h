@@ -42,7 +42,7 @@ typedef struct{
     FILE * log;
 }globalData;
 
-globalData * data;
+extern globalData * data;
 
 void sigHandler(void);
 
