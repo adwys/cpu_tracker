@@ -27,7 +27,8 @@ void abrtHandler(){
     destroyTracker();
 }
 
-void initTracker(globalData ** newData){
+void initTracker(){
+    globalData ** newData = &data;
     signal(SIGTERM, (__sighandler_t) sigHandler);
     signal(SIGINT, (__sighandler_t) sigHandler);
     signal(SIGABRT, (__sighandler_t) abrtHandler);
@@ -141,7 +142,7 @@ _Noreturn void watchdogThreadHandler(){
 
 }
 
-char * logMessage(char * message){
+void logMessage(char * message){
     unsigned int n = (unsigned int) strlen(message) + 1;
     sem_wait(&data->write);
     write(data->fd[1],&n,sizeof(int));

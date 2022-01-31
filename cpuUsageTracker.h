@@ -42,16 +42,15 @@ typedef struct{
     FILE * log;
 }globalData;
 
-
 globalData * data;
 
 void sigHandler(void);
 void abrtHandler(void);
 void destroyTracker(void);
 
-char * logMessage(char *);
+void logMessage(char *);
 
-void initTracker(globalData ** data);
+void initTracker(void);
 
 _Noreturn void readerThreadHandler(void);
 

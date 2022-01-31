@@ -4,9 +4,7 @@
 
 
 int main(void) {
-
-    initTracker(&data);
-
+    initTracker();
     pthread_create(&data->readerThread, NULL, (void *(*)(void *)) readerThreadHandler, NULL);
     pthread_create(&data->analyzerThread, NULL, (void *(*)(void *))  analyzerThreadHandler,NULL);
     pthread_create(&data->printerThread, NULL, (void *(*)(void *)) printerThreadHandler, NULL);
